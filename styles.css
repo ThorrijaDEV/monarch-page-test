@@ -1,45 +1,132 @@
 /* ==========================================================================
-   Monarch — shared presentation layer
+   Monarch — shared presentation layer (refined)
    --------------------------------------------------------------------------
    The base layout lives in each page's markup (unchanged). This file holds
    only additive layers: keyboard focus visibility, sidebar hover (parity
-   with the removed inline JS handlers), reduced-motion support, and the
-   small-screen behavior. All colors are the site's existing palette values.
+   with the removed inline JS handlers), reduced-motion support, the
+   small-screen behavior, and refined motion/typography/glass polish.
+   All colors are the site's existing palette values — no design changes.
    ========================================================================== */
 
-/* --- 1. Keyboard focus visibility (was missing entirely) ------------------ */
+/* --- 0. Global typography & rendering polish ------------------------------ */
+/* Improves text rendering quality across browsers without changing fonts. */
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Smooth, natural easing used consistently across the site. */
+:root {
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-circ: cubic-bezier(0.08, 0.82, 0.17, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --duration-fast: 180ms;
+    --duration-base: 300ms;
+    --duration-slow: 480ms;
+}
+
+/* --- 1. Keyboard focus visibility (refined) ------------------------------- */
+/* Smooth transition on focus for polished feel. */
 a:focus-visible,
 button:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 2px;
+    transition: outline-color var(--duration-fast) var(--ease-out-expo),
+                outline-offset var(--duration-fast) var(--ease-out-expo);
 }
 
-/* --- 2. Sidebar link hover ------------------------------------------------ */
-/* Replaces the previous per-element onmouseover/onmouseout attributes with
-   the identical visual value. Active-page links keep their existing
-   background and were never hovered before — kept that way. */
+/* --- 2. Sidebar link hover (refined) -------------------------------------- */
+/* Replaces inline onmouseover/onmouseout with CSS transition for smoothness. */
+#sidebar a {
+    transition: background var(--duration-fast) var(--ease-out-expo),
+                color var(--duration-fast) var(--ease-out-expo),
+                border-left-color var(--duration-fast) var(--ease-out-expo);
+}
+
 #sidebar a:not([aria-current="page"]):hover {
     background: rgba(9, 32, 75, 0.08);
 }
 
-/* --- 3. Respect reduced-motion users -------------------------------------- */
+#sidebar a:not([aria-current="page"]):active {
+    background: rgba(9, 32, 75, 0.12);
+}
+
+/* --- 3. Card entrance animations (subtle, staggered) ---------------------- */
+/* Adds a polished load sequence without changing layout or final state. */
+@keyframes cardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    /* Home / JoinUs welcome card */
+    #mainContent > div:first-child,
+    /* About / Achievements main card */
+    #mainContent > div[style*="width:900px"],
+    #mainContent > div[style*="width: 900px"],
+    /* Members grid cards */
+    #mainContent .sidebar-label ~ div[style*="width:260px"],
+    #mainContent [style*="width:260px"][style*="border-radius:16px"],
+    /* Timeline .content cards */
+    .timeline .content {
+        animation: cardEntrance var(--duration-slow) var(--ease-out-expo) both;
+    }
+
+    /* Stagger for members grid (4 cards) */
+    #mainContent [style*="width:260px"][style*="border-radius:16px"]:nth-child(1) { animation-delay: 60ms; }
+    #mainContent [style*="width:260px"][style*="border-radius:16px"]:nth-child(2) { animation-delay: 120ms; }
+    #mainContent [style*="width:260px"][style*="border-radius:16px"]:nth-child(3) { animation-delay: 180ms; }
+    #mainContent [style*="width:260px"][style*="border-radius:16px"]:nth-child(4) { animation-delay: 240ms; }
+
+    /* Stagger for timeline events */
+    .timeline .container:nth-child(1) .content { animation-delay: 60ms; }
+    .timeline .container:nth-child(2) .content { animation-delay: 140ms; }
+    .timeline .container:nth-child(3) .content { animation-delay: 220ms; }
+    .timeline .container:nth-child(4) .content { animation-delay: 300ms; }
+}
+
+/* --- 4. Respect reduced-motion users -------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
     #sidebar,
     #mainContent,
-    #sidebar a {
+    #sidebar a,
+    #mobileToggle,
+    body::after,
+    * {
+        animation: none !important;
         transition: none !important;
     }
 }
 
-/* --- 4. Floating menu button (mobile only) -------------------------------- */
-/* Lives outside the nav on purpose: the nav's backdrop-filter creates a
-   containing block, which would pin any fixed-position descendant to the
-   (off-screen) sidebar instead of the viewport. */
+/* --- 5. Floating menu button (mobile only) -------------------------------- */
+/* Refined with hover/active states and smooth transitions. */
 #mobileToggle {
     display: none;
+    transition: background var(--duration-fast) var(--ease-out-expo),
+                transform var(--duration-fast) var(--ease-out-expo),
+                box-shadow var(--duration-fast) var(--ease-out-expo);
 }
 
-/* --- 5. Small screens: fixed sidebar becomes an off-canvas drawer --------- */
+#mobileToggle:hover {
+    background: rgba(9, 32, 75, 1);
+    color: white;
+    transform: scale(1.04);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+#mobileToggle:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* --- 6. Small screens: fixed sidebar becomes an off-canvas drawer --------- */
 /* The 768px breakpoint must stay byte-identical with the one in sidebar.js. */
 @media (max-width: 768px) {
 
@@ -57,12 +144,13 @@ button:focus-visible {
         width: 240px !important;
         padding: 25px 12px !important;
         transform: translateX(-105%);
-        transition: transform 0.3s ease !important;
+        transition: transform var(--duration-base) var(--ease-out-expo) !important;
         box-shadow: 6px 0 30px rgba(0, 0, 0, 0.25) !important;
     }
 
     #sidebar.open {
         transform: translateX(0);
+        transition: transform var(--duration-slow) var(--ease-spring) !important;
     }
 
     /* Always show the expanded look inside the drawer */
@@ -106,10 +194,101 @@ button:focus-visible {
         opacity: 0;
         pointer-events: none;
         z-index: 900;
-        transition: opacity 0.3s ease;
+        transition: opacity var(--duration-base) var(--ease-out-expo);
     }
     body.drawer-open::after {
         opacity: 1;
         pointer-events: auto;
     }
+}
+
+/* --- 7. Custom scrollbar (theme-matched, subtle) -------------------------- */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(9, 32, 75, 0.35);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(9, 32, 75, 0.55);
+    background-clip: content-box;
+}
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(9, 32, 75, 0.35) transparent;
+}
+
+/* --- 8. Selection color (theme-matched) ----------------------------------- */
+::selection {
+    background: rgba(9, 32, 75, 0.25);
+    color: inherit;
+}
+
+/* --- 9. Subtle glass refinement for all frosted cards --------------------- */
+/* Enhances backdrop-filter quality on supported browsers without changing look. */
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+    #sidebar,
+    #mainContent > div,
+    #mainContent > div[style*="width:900px"],
+    #mainContent > div[style*="width: 900px"],
+    #mainContent [style*="width:260px"][style*="border-radius:16px"],
+    #mainContent [style*="width:300px"][style*="border-radius:16px"],
+    .timeline .content {
+        -webkit-backdrop-filter: blur(12px) saturate(1.05);
+        backdrop-filter: blur(12px) saturate(1.05);
+    }
+}
+
+/* --- 10. Smooth sidebar collapse transition (desktop) --------------------- */
+/* The inline script toggles width; this ensures the transition is polished. */
+#sidebar {
+    transition: width var(--duration-base) var(--ease-out-expo),
+                padding var(--duration-base) var(--ease-out-expo),
+                box-shadow var(--duration-base) var(--ease-out-expo);
+}
+
+#mainContent {
+    transition: margin-left var(--duration-base) var(--ease-out-expo);
+}
+
+#sidebar a {
+    transition: background var(--duration-fast) var(--ease-out-expo),
+                padding var(--duration-fast) var(--ease-out-expo),
+                justify-content var(--duration-fast) var(--ease-out-expo),
+                border-left-width var(--duration-fast) var(--ease-out-expo),
+                border-left-color var(--duration-fast) var(--ease-out-expo);
+}
+
+#toggleButton {
+    transition: align-self var(--duration-base) var(--ease-out-expo),
+                background var(--duration-fast) var(--ease-out-expo),
+                color var(--duration-fast) var(--ease-out-expo);
+}
+
+#toggleButton:hover {
+    background: rgba(9, 32, 75, 0.15);
+}
+
+/* --- 11. Image loading polish --------------------------------------------- */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Prevent layout shift on logo/badge images */
+img[src="logo.webp"],
+img[src="cambc-2026.webp"] {
+    content-visibility: auto;
 }
