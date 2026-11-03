@@ -29,6 +29,7 @@
 
     function setCollapsed(next) {
         collapsed = next;
+        sidebar.classList.toggle("collapsed", next);
 
         if (collapsed) {
             sidebar.style.width = "80px";
@@ -102,6 +103,7 @@
 
     function applyMode() {
         sidebar.classList.remove("open");
+        sidebar.classList.remove("collapsed");
         document.body.classList.remove("drawer-open");
         if (mobileToggle) {
             mobileToggle.setAttribute("aria-expanded", "false");

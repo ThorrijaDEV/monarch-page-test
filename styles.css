@@ -292,3 +292,101 @@ img[src="logo.webp"],
 img[src="cambc-2026.webp"] {
     content-visibility: auto;
 }
+
+/* --- 12. Subtle atmosphere: noise texture + vignette ---------------------- */
+/* Adds photographic paper feel and centers focus without changing colors. */
+@media (prefers-reduced-motion: no-preference) {
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        /* Subtle film grain noise (SVG data URI, ~1.2KB) */
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        opacity: 0.025;
+        /* Gentle vignette to draw eye to center content */
+        background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 40%, rgba(0,0,0,0.18) 100%),
+                    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        opacity: 0.035;
+    }
+}
+
+/* --- 13. Card hover elevation (tactile feel) -------------------------------- */
+/* Cards lift slightly on hover with deeper shadow, reinforcing interactivity. */
+@media (prefers-reduced-motion: no-preference) {
+    /* Main content cards (home, about, achievements, joinus) */
+    #mainContent > div:first-child,
+    #mainContent > div[style*="width:900px"],
+    #mainContent > div[style*="width: 900px"],
+    #mainContent > div[style*="width:300px"][style*="border-radius:16px"],
+    /* Members grid cards */
+    #mainContent [style*="width:260px"][style*="border-radius:16px"],
+    /* Timeline event cards */
+    .timeline .content {
+        transition: transform var(--duration-fast) var(--ease-out-expo),
+                    box-shadow var(--duration-fast) var(--ease-out-expo);
+    }
+
+    #mainContent > div:first-child:hover,
+    #mainContent > div[style*="width:900px"]:hover,
+    #mainContent > div[style*="width: 900px"]:hover,
+    #mainContent > div[style*="width:300px"][style*="border-radius:16px"]:hover,
+    #mainContent [style*="width:260px"][style*="border-radius:16px"]:hover,
+    .timeline .content:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+    }
+}
+
+/* --- 14. Animated hamburger ↔ close morph ----------------------------------- */
+/* Toggle button transitions between ☰ and ✕ with smooth morph. */
+#toggleButton {
+    position: relative;
+    overflow: visible;
+}
+
+#toggleButton::before {
+    content: "☰";
+    display: block;
+    transition: transform var(--duration-base) var(--ease-out-expo),
+                opacity var(--duration-fast) var(--ease-out-expo);
+}
+
+#toggleButton::after {
+    content: "✕";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg) scale(0.7);
+    opacity: 0;
+    transition: transform var(--duration-base) var(--ease-spring),
+                opacity var(--duration-fast) var(--ease-out-expo);
+    pointer-events: none;
+}
+
+/* When sidebar is collapsed (desktop) or drawer open (mobile) */
+#sidebar:not([style*="width: 240px"]):not([style*="width:240px"]) #toggleButton::before,
+body.drawer-open #toggleButton::before {
+    transform: rotate(90deg) scale(0.7);
+    opacity: 0;
+}
+
+#sidebar:not([style*="width: 240px"]):not([style*="width:240px"]) #toggleButton::after,
+body.drawer-open #toggleButton::after {
+    transform: translate(-50%, -50%) rotate(0) scale(1);
+    opacity: 1;
+}
+
+/* Also handle the inline-style toggle via JS class (more reliable) */
+#sidebar.collapsed #toggleButton::before,
+body.drawer-open #toggleButton::before {
+    transform: rotate(90deg) scale(0.7);
+    opacity: 0;
+}
+
+#sidebar.collapsed #toggleButton::after,
+body.drawer-open #toggleButton::after {
+    transform: translate(-50%, -50%) rotate(0) scale(1);
+    opacity: 1;
+}
